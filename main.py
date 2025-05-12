@@ -1,8 +1,9 @@
 from dotenv import load_dotenv
 from langchain import hub
 from langchain_openai import ChatOpenAI
-from langchain.agents import create_react_agent, AgentExecutor
+from langchain.agents import create_react_agent, AgentExecutor, create
 from langchain_experimental.tools import PythonREPLTool
+from langchain_experimental.agents import create_csv_agent
 from langchain.schema import SystemMessage
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
@@ -11,7 +12,7 @@ load_dotenv()
 
 
 def main():
-    
+
     print("Start...")
 
     instructions = """You are an agent designed to write and execute python code to answer questions.
@@ -29,16 +30,26 @@ def main():
     tools = [PythonREPLTool()]
 
     agent = create_react_agent(
-        llm=ChatOpenAI(temperature=0, model="gpt-4-turbo"),
+        llm=ChatOpenAI(temperature=0, model="o4-mini"),
         tools=tools,
         prompt=prompt,
     )
 
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-    agent_executor.invoke(input={"input": """generate and save in current working directory 3 QRcodes
-                                that point to www.google.com, you have qrcode package installed already"""})
+    csv_agent = create_csv_agent(
+        llm=ChatOpenAI(temperature=0, model="o4-mini"),
+        path="episode_info.csv",
+        verbose=True,
+    )
 
+    # agent_executor.invoke(input={"input": """generate and save in current working directory 3 QRcodes
+    #                             that point to www.google.com, you have qrcode package installed already"""})
+
+    csv_agent.invoke(input={
+        "input": """
+        Which writer wrote the most episodes? how many episodes did he write?
+        """})
 
 if __name__ == "__main__":
     main()
